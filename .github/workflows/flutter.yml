@@ -1,0 +1,61 @@
+name: Flutter
+on:
+  push:
+    branches: 
+      - master
+  pull_request:
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v1
+      - name: Run flutter format
+        run: flutter format --dry-run --set-exit-if-changed .
+      - name: Analyze core
+        run: cd packages/core && flutter analyze
+      - name: Analyze fwfh_cached_network_image
+        run: cd packages/fwfh_cached_network_image && flutter analyze
+      - name: Analyze fwfh_chewie
+        run: cd packages/fwfh_chewie && flutter analyze
+      - name: Analyze fwfh_svg
+        run: cd packages/fwfh_svg && flutter analyze
+      - name: Analyze fwfh_url_launcher
+        run: cd packages/fwfh_url_launcher && flutter analyze
+      - name: Analyze fwfh_webview
+        run: cd packages/fwfh_webview && flutter analyze
+      - name: Analyze enhanced
+        run: cd packages/enhanced && flutter analyze
+      - name: Analyze demo_app
+        run: cd demo_app && flutter analyze
+
+  unit_test:
+    name: Unit test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v1
+      - run: ./tool/test.sh --coverage
+      - run: bash <(curl -s https://codecov.io/bash)
+
+  ios:
+    name: iOS Test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v1
+      - name: Create simulator
+        run: |
+          set -e
+
+          _deviceType=$( xcrun simctl list devicetypes iphone -j | jq '.devicetypes[-1]' )
+          _deviceTypeName=$( echo $_deviceType | jq .name -r )
+          _deviceTypeId=$( echo $_deviceType | jq .identifier -r )
+          _runTime=$( xcrun simctl list runtimes ios -j | jq '.runtimes[].identifier' -r | tail -n 1 )
+          xcrun simctl create "$_deviceTypeName" "$_deviceTypeId" "$_runTime" | xargs xcrun simctl boot
+      - run: ./tool/integration.sh

@@ -2,15 +2,53 @@
 
 set -e
 
-_testArgs=''
-if [ ! -z "$COVERAGE" ]; then
-  _testArgs="${_testArgs} --coverage"
+( \
+  cd ./packages/core \
+  && flutter pub get \
+  && flutter test "$@" \
+  && echo 'packages/core OK' \
+)
+
+if [ -z "$UPDATE_GOLDENS" ]; then
+  ( \
+    cd ./packages/fwfh_cached_network_image \
+    && flutter pub get \
+    && flutter test "$@" \
+    && echo 'packages/fwfh_cached_network_image OK' \
+  )
+
+  ( \
+    cd ./packages/fwfh_chewie \
+    && flutter pub get \
+    && flutter test "$@" \
+    && echo 'packages/fwfh_chewie OK' \
+  )
+
+  ( \
+    cd ./packages/fwfh_svg \
+    && flutter pub get \
+    && flutter test "$@" \
+    && echo 'packages/fwfh_svg OK' \
+  )
+
+  ( \
+    cd ./packages/fwfh_webview \
+    && flutter pub get \
+    && flutter test "$@" \
+    && echo 'packages/fwfh_webview OK' \
+  )
+
+  ( \
+    cd ./packages/enhanced \
+    && flutter pub get \
+    && flutter test "$@" \
+    && echo 'packages/enhanced OK' \
+  )
 fi
 
-cd "$( dirname $( dirname ${BASH_SOURCE[0]}))"/packages/core
-flutter test $( echo $_testArgs )
-echo 'flutter_widget_from_html_core OK'
-
-cd ../..
-flutter test $( echo $_testArgs )
-echo 'flutter_widget_from_html OK'
+( \
+  cd ./demo_app \
+  && flutter pub get \
+  && flutter test "$@" \
+  && echo 'demo_app OK' \
+)
